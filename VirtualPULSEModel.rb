@@ -364,11 +364,7 @@ class VirtualPULSEModel < OpenStudio::Model::Model
     
     #set the space type of all spaces by setting it at the building level
     self.getBuilding.setSpaceType(space_type)
-    
-    
-    
-    
-    
+
   end
 
   def add_thermostats(params)
@@ -396,6 +392,113 @@ class VirtualPULSEModel < OpenStudio::Model::Model
     self.getThermalZones.each do |zone|
       zone.setThermostatSetpointDualSetpoint(new_thermostat)
     end
+
+  end  
+  
+  def save_openstudio_osm(params)
+  
+    osm_save_directory = params["osm_save_directory"]
+    osm_name = params["osm_name"]
+  
+    save_path = OpenStudio::Path.new("#{osm_save_directory}/#{osm_name}")
+    self.save(save_path,true)
+    
+  end
+  
+  def translate_to_energyplus_and_save_idf(params)
+  
+    idf_save_directory = params["idf_save_directory"]
+    idf_name = params["idf_name"]
+  
+    #make a forward translator and convert openstudio model to energyplus
+    forward_translator = OpenStudio::EnergyPlus::ForwardTranslator.new()
+    workspace = forward_translator.translateModel(self)
+    idf_save_path = OpenStudio::Path.new("#{idf_save_directory}/#{idf_name}")
+    workspace.save(idf_save_path,true)
+  
+  end
+
+  def add_design_days()
+      
+    require 'openstudio/energyplus/find_energyplus'
+     
+    # find energyplus
+    ep_hash = OpenStudio::EnergyPlus::find_energyplus(7,1)
+    weather_path = OpenStudio::Path.new(ep_hash[:energyplus_weatherdata].to_s)
+      
+    #load the design days for Chicago
+    ddy_path = OpenStudio::Path.new("#{weather_path.to_s}/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.ddy")    
+    #make sure the file exists on the filesystem; if it does, open it
+    if OpenStudio::exists(ddy_path)
+      ddy_idf = OpenStudio::IdfFile::load(ddy_path, "EnergyPlus".to_IddFileType).get
+      ddy_workspace = OpenStudio::Workspace.new(ddy_idf)
+      reverse_translator = OpenStudio::EnergyPlus::ReverseTranslator.new()
+      ddy_model = reverse_translator.translateWorkspace(ddy_workspace)
+      #add the objects in the ddy file to the model
+      self.addObjects(ddy_model.objects)
+    else
+      puts "#{ddy_path} couldn't be found"
+    end  
+
+  end
+  
+  def self.run_energyplus_simulation(params)
+    
+    require 'openstudio/energyplus/find_energyplus'
+
+    idf_directory = params["idf_directory"]
+    idf_name = params["idf_name"]
+     
+    # find energyplus
+    ep_hash = OpenStudio::EnergyPlus::find_energyplus(7,1)
+    ep_path = OpenStudio::Path.new(ep_hash[:energyplus_exe].to_s)
+    idd_path = OpenStudio::Path.new(ep_hash[:energyplus_idd].to_s)
+    weather_path = OpenStudio::Path.new(ep_hash[:energyplus_weatherdata].to_s)
+
+    # just run in Chicago for now
+    #weather_paths = Dir.glob("#{weather_path.to_s}/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw")
+    #raise "Unable to find weather files." if weather_paths.empty?
+    #epw_path = OpenStudio::Path.new(weather_paths.first)
+    epw_path = OpenStudio::Path.new("#{weather_path.to_s}/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw")
+        
+    # make a run manager
+    run_manager_db_path = OpenStudio::Path.new("#{idf_directory}/VirtualPULSE.db")
+    run_manager = OpenStudio::Runmanager::RunManager.new(run_manager_db_path, true)
+
+    #setup tool info to pass run manager the location of energy plus
+    ep_tool = OpenStudio::Runmanager::ToolInfo.new(ep_path)
+    ep_tool_info = OpenStudio::Runmanager::Tools.new()
+    ep_tool_info.append(ep_tool)
+
+    #get the run manager configuration options
+    config_options = run_manager.getConfigOptions()
+
+    sys_num_array = Array.new
+
+    idf_path = OpenStudio::Path.new("#{idf_directory}/#{idf_name}")
+    
+    output_path = OpenStudio::Path.new("#{idf_directory}/ENERGYPLUS/#{idf_name}")
+
+    #make the ENERGYPLUS directory to store the results
+    output_path_string = File.dirname(output_path.to_s)
+      
+    # make a job for the file we want to run
+    job = OpenStudio::Runmanager::JobFactory::createEnergyPlusJob(ep_tool,
+                                                                 idd_path,
+                                                                 idf_path,
+                                                                 epw_path,
+                                                                 output_path)
+    
+    #put the job in the run queue
+    run_manager.enqueue(job, true)
+
+    # wait for jobs to complete
+    while run_manager.workPending()
+      sleep 1
+      OpenStudio::Application::instance().processEvents()
+    end
+
+    puts "finished running #{idf_name}"
 
   end  
   

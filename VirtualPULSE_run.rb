@@ -40,9 +40,17 @@ model.add_space_type({"NREL_reference_building_vintage" => "ASHRAE_90.1-2004",
                     "NREL_reference_building_primary_space_type" => "SmallOffice",
                     "NREL_reference_building_secondary_space_type" => "WholeBuilding"})  
 
-#Save the osm
-save_path = OpenStudio::Path.new("#{Dir.pwd}/exampleVirtualPULSEModel.osm")
-model.save(save_path,true)
-
-
-
+#add design days to the model
+model.add_design_days()
+       
+#save the OpenStudio model (.osm)
+model.save_openstudio_osm({"osm_save_directory" => Dir.pwd,
+                           "osm_name" => "exampleVirtualPULSEModel.osm"})
+                           
+#translate the OpenStudio model (.osm) to an EnergyPlus model (.idf)
+model.translate_to_energyplus_and_save_idf({"idf_save_directory" => Dir.pwd,
+                                            "idf_name" => "exampleVirtualPULSEModel.idf"})
+  
+#run the EnergyPlus model (.idf)
+VirtualPULSEModel::run_energyplus_simulation({"idf_directory" => Dir.pwd,
+                                              "idf_name" => "exampleVirtualPULSEModel.idf"})
