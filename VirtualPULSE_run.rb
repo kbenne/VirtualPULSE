@@ -20,7 +20,7 @@ model.add_windows({"wwr" => 0.4,
 #add HVAC - Packaged VAV w/ Reheat - DX Cooling, Hot Water heat and reheat
 model.add_hvac({"fan_eff" => 0.5,
               "boiler_eff" => 0.66,
-              "boiler_fuel_type" => "Gasoline",
+              "boiler_fuel_type" => "NaturalGas",
               "coil_cool_rated_high_speed_COP" => 5.5,
               "coil_cool_rated_low_speed_COP" => 6.6,
               "economizer_type" => "Fixed Dry Bulb Temperature Limit",
@@ -52,5 +52,5 @@ model.translate_to_energyplus_and_save_idf({"idf_save_directory" => Dir.pwd,
                                             "idf_name" => "exampleVirtualPULSEModel.idf"})
   
 #run the EnergyPlus model (.idf)
-VirtualPULSEModel::run_energyplus_simulation({"idf_directory" => Dir.pwd,
-                                              "idf_name" => "exampleVirtualPULSEModel.idf"})
+#VirtualPULSEModel::run_energyplus_simulation({"idf_directory" => Dir.pwd,
+#                                              "idf_name" => "exampleVirtualPULSEModel.idf"})
