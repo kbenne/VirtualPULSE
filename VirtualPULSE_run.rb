@@ -52,5 +52,5 @@ model.translate_to_energyplus_and_save_idf({"idf_save_directory" => Dir.pwd,
                                             "idf_name" => "exampleVirtualPULSEModel.idf"})
   
 #run the EnergyPlus model (.idf)
-#VirtualPULSEModel::run_energyplus_simulation({"idf_directory" => Dir.pwd,
-#                                              "idf_name" => "exampleVirtualPULSEModel.idf"})
+VirtualPULSEModel::run_energyplus_simulation({"idf_directory" => Dir.pwd,
+                                              "idf_name" => "exampleVirtualPULSEModel.idf"})
