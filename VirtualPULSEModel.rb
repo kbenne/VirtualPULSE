@@ -479,15 +479,15 @@ class VirtualPULSEModel < OpenStudio::Model::Model
     
     output_path = OpenStudio::Path.new("#{idf_directory}/ENERGYPLUS/#{idf_name}")
 
+
     #make the ENERGYPLUS directory to store the results
     output_path_string = File.dirname(output_path.to_s)
       
     # make a job for the file we want to run
-    job = OpenStudio::Runmanager::JobFactory::createEnergyPlusJob(ep_tool,
-                                                                 idd_path,
-                                                                 idf_path,
-                                                                 epw_path,
-                                                                 output_path)
+    workflow = OpenStudio::Runmanager::Workflow("EnergyPlusPreProcess->EnergyPlus")
+    workflow.addTool(ep_tool)
+    job = workflow.create(output_path, idf_path, epw_path)
+    
     
     #put the job in the run queue
     run_manager.enqueue(job, true)
