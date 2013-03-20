@@ -484,7 +484,7 @@ class VirtualPULSEModel < OpenStudio::Model::Model
     output_path_string = File.dirname(output_path.to_s)
       
     # make a job for the file we want to run
-    workflow = OpenStudio::Runmanager::Workflow("EnergyPlusPreProcess->EnergyPlus")
+    workflow = OpenStudio::Runmanager::Workflow.new("EnergyPlusPreProcess->EnergyPlus")
     workflow.addTool(ep_tool)
     job = workflow.create(output_path, idf_path, epw_path)
     
