@@ -465,13 +465,12 @@ class VirtualPULSEModel < OpenStudio::Model::Model
     run_manager_db_path = OpenStudio::Path.new("#{idf_directory}/VirtualPULSE.db")
     run_manager = OpenStudio::Runmanager::RunManager.new(run_manager_db_path, true)
 
-    #setup tool info to pass run manager the location of energy plus
-    ep_tool = OpenStudio::Runmanager::ToolInfo.new(ep_path)
-    ep_tool_info = OpenStudio::Runmanager::Tools.new()
-    ep_tool_info.append(ep_tool)
-
     #get the run manager configuration options
     config_options = run_manager.getConfigOptions()
+    config_options.fastFindEnergyPlus()
+    tools = config_options.getTools()
+    
+    # assert !tools.getAllByName("energyplus").tools().empty()
 
     sys_num_array = Array.new
 
@@ -485,7 +484,7 @@ class VirtualPULSEModel < OpenStudio::Model::Model
       
     # make a job for the file we want to run
     workflow = OpenStudio::Runmanager::Workflow.new("EnergyPlusPreProcess->EnergyPlus")
-    workflow.addTool(ep_tool)
+    workflow.add(tools)
     job = workflow.create(output_path, idf_path, epw_path)
     
     
