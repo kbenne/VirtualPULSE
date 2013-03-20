@@ -451,14 +451,9 @@ class VirtualPULSEModel < OpenStudio::Model::Model
      
     # find energyplus
     ep_hash = OpenStudio::EnergyPlus::find_energyplus(7,2)
-    ep_path = OpenStudio::Path.new(ep_hash[:energyplus_exe].to_s)
-    idd_path = OpenStudio::Path.new(ep_hash[:energyplus_idd].to_s)
     weather_path = OpenStudio::Path.new(ep_hash[:energyplus_weatherdata].to_s)
 
     # just run in Chicago for now
-    #weather_paths = Dir.glob("#{weather_path.to_s}/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw")
-    #raise "Unable to find weather files." if weather_paths.empty?
-    #epw_path = OpenStudio::Path.new(weather_paths.first)
     epw_path = OpenStudio::Path.new("#{weather_path.to_s}/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw")
         
     # make a run manager
